@@ -28,7 +28,7 @@ tag=*_origin
       <default>*</default>
     </input>
     <input type="time" token="kamtime" searchWhenChanged="false">
-      <label>Time  Picker</label>
+      <label>Time Picker</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
@@ -102,7 +102,7 @@ tag=*_origin
       <default></default>
     </input>
     <input type="radio" token="superfunc">
-      <label>Super Functions (use with TN8Metric Event Type)</label>
+      <label>Super Functions (use with the TN8Metric Event Type)</label>
       <choice value="">No Super Functions</choice>
       <choice value="`superstats(mypath)`">Super Stats</choice>
       <choice value="`superperc(mypath)`">Super Percent</choice>
