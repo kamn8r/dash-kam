@@ -1,0 +1,138 @@
+<form>
+  <label>DashKam v5</label>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="dropdown" token="state" searchWhenChanged="false">
+      <label>Origin</label>
+      <fieldForLabel>tag</fieldForLabel>
+      <fieldForValue>tag</fieldForValue>
+      <search>
+        <query>sourcetype="fire-ext_prd_app"
+tag=*_origin
+| dedup tag
+| table tag
+| sort tag</query>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </search>
+      <choice value="*">Select Origin</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="event_type">
+      <label>Event Type</label>
+      <choice value="*">Select Event Type</choice>
+      <choice value="firstitemLoadTime">First Item Load Time</choice>
+      <choice value="tn8error">TN8Error</choice>
+      <choice value="tn8metrics">TN8Metric</choice>
+      <initialValue>*</initialValue>
+      <default>*</default>
+    </input>
+    <input type="time" token="kamtime" searchWhenChanged="false">
+      <label>Time  Picker</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="unique" searchWhenChanged="false">
+      <label>Unique Count</label>
+      <choice value="*">Disable Deduplication</choice>
+      <choice value="| dedup loginId">Dedup loginId</choice>
+      <choice value="| dedup browserId">Dedup browserId</choice>
+      <choice value="| dedup loginId,browserId">Dedup loginId &amp; browserId</choice>
+      <fieldForLabel>unique</fieldForLabel>
+      <fieldForValue>unique</fieldForValue>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="distinct" searchWhenChanged="false">
+      <label>Distinct Count</label>
+      <choice value="count">Disable Distinct Count</choice>
+      <choice value="dc(loginId)">Distinct Count loginId</choice>
+      <choice value="dc(browserId)">Distinct Count browserId</choice>
+      <fieldForLabel>distinct</fieldForLabel>
+      <fieldForValue>distinct</fieldForValue>
+      <default>count</default>
+      <initialValue>count</initialValue>
+    </input>
+    <input type="radio" token="ipadd" searchWhenChanged="false">
+      <label>IP Address</label>
+      <choice value="">Don't list by IP</choice>
+      <choice value="ipaddress_0">List by IP</choice>
+      <fieldForLabel>ipadd</fieldForLabel>
+      <fieldForValue>ipadd</fieldForValue>
+      <default></default>
+    </input>
+    <input type="radio" token="errmess" searchWhenChanged="false">
+      <label>Show errors by message</label>
+      <choice value="">Not looking at errors</choice>
+      <choice value="message">Error by message</choice>
+      <fieldForLabel>errmess</fieldForLabel>
+      <fieldForValue>errmess</fieldForValue>
+      <default></default>
+    </input>
+    <input type="dropdown" token="look">
+      <label>Perform Dataset Lookup (must match the Customer)</label>
+      <choice value="">No Lookup</choice>
+      <choice value="AZ_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Arizona</choice>
+      <choice value="FL_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Florida</choice>
+      <choice value="IA_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Iowa</choice>
+      <choice value="IL_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Illinois</choice>
+      <choice value="KY_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Kentucky</choice>
+      <choice value="MD_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Maryland</choice>
+      <choice value="MN_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Minnesota</choice>
+      <choice value="NJ_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">New Jersey</choice>
+      <choice value="VA_Org_Contacts.csv FinalTestOrgCode OUTPUTNEW">Virginia</choice>
+      <default></default>
+    </input>
+    <input type="radio" token="district">
+      <label>District (only if using Dataset Lookup)</label>
+      <choice value="">Don't show district</choice>
+      <choice value="parent_org">Show district</choice>
+      <fieldForLabel>district</fieldForLabel>
+      <fieldForValue>district</fieldForValue>
+      <default></default>
+    </input>
+    <input type="radio" token="school">
+      <label>School (only if using Dataset Lookup)</label>
+      <choice value="">Don't show school</choice>
+      <choice value="org_name">Show school</choice>
+      <fieldForLabel>school</fieldForLabel>
+      <fieldForValue>school</fieldForValue>
+      <default></default>
+    </input>
+    <input type="radio" token="superfunc">
+      <label>Super Functions (use with TN8Metric Event Type)</label>
+      <choice value="">No Super Functions</choice>
+      <choice value="`superstats(mypath)`">Super Stats</choice>
+      <choice value="`superperc(mypath)`">Super Percent</choice>
+      <default></default>
+      <fieldForLabel>superfunc</fieldForLabel>
+      <fieldForValue>superfunc</fieldForValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>Event Analytics _ Origin: $state$ _ Event: $event_type$</title>
+        <search>
+          <query>sourcetype="fire-ext_prd_app" tag=$state$ event=$event_type$
+$unique$
+| spath output=mypath path="metrics.progressBarAvgTime" 
+| lookup ipresolver.csv  ipaddress_0 OUTPUT xinfoTestOrgCode
+| eval FinalTestOrgCode = xinfoTestOrgCode 
+| lookup $look$ $district$, $school$ 
+| eval mypath = round(mypath,0)/1000
+| stats $distinct$ $superfunc$ by event, $ipadd$, $errmess$, $district$, $school$
+| rename parent_org AS District, org_name AS School, message AS "Error Code", event AS Event, ipaddress_0 AS "IP Address"
+| sort - count</query>
+          <earliest>$kamtime.earliest$</earliest>
+          <latest>$kamtime.latest$</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
