@@ -1,2 +1,2 @@
-# DashKam
-Backup of the DashKam Splunk source XML.
+# dash-kam
+Backup of the dash-kam Splunk source XML.
